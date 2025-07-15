@@ -173,13 +173,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = memo(({
         )}
       </View>
 
-      <Text style={styles.rangeText}>{getDateRangeText()}</Text>
+      {/* <Text style={styles.rangeText}>{getDateRangeText()}</Text>
       
       {isRoundTrip && getDaysDifference() && (
         <Text style={styles.daysText}>
           {getDaysDifference()} day{getDaysDifference() !== 1 ? 's' : ''} trip
         </Text>
-      )}
+      )} */}
 
       {/* Departure Date Picker Modal */}
       {Platform.OS === 'android' ? (
