@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import { flightApi } from '../services/flightApi';
 import { Flight, FlightSearchParams } from '../types';
 import FlightCard from '../components/FlightCard';
@@ -30,6 +33,86 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [isUsingRealApi, setIsUsingRealApi] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+
+  // Get user's current location and set default airport
+  useEffect(() => {
+    getCurrentLocation();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') {
+      return true; // iOS handles permissions differently
+    }
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Permission',
+          message: 'This app needs access to your location to find nearby airports.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        console.log('Location permission denied');
+        setIsLoadingLocation(false);
+        return;
+      }
+
+      // Get current position using the proper geolocation library
+      Geolocation.getCurrentPosition(
+        async (position: any) => {
+          const { latitude, longitude } = position.coords;
+          console.log('Current location:', { latitude, longitude });
+
+          try {
+            // Get nearby airports
+            const nearbyAirports = await flightApi.getNearbyAirports(latitude, longitude);
+            console.log('Nearby airports:', nearbyAirports);
+
+            if (nearbyAirports && nearbyAirports.length > 0) {
+              // Set the closest airport as default
+              const closestAirport = nearbyAirports[0];
+              const airportCode = closestAirport.iataCode || closestAirport.code || closestAirport.skyId;
+              
+              if (airportCode) {
+                setSearchParams(prev => ({
+                  ...prev,
+                  from: airportCode
+                }));
+                console.log('Set default airport to:', airportCode);
+              }
+            }
+          } catch (error) {
+            console.log('Failed to get nearby airports:', error);
+          } finally {
+            setIsLoadingLocation(false);
+          }
+        },
+        (error: any) => {
+          console.log('Location error:', error);
+          setIsLoadingLocation(false);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    } catch (error) {
+      console.log('Location permission error:', error);
+      setIsLoadingLocation(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchParams.from || !searchParams.to) {
@@ -104,13 +187,22 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
             </View>
           )}
           
-          <TextInput
-            style={styles.input}
-            placeholder="From (e.g., LAX, New York)"
-            value={searchParams.from}
-            onChangeText={(text) => setSearchParams({ ...searchParams, from: text })}
-            autoCapitalize="characters"
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>From</Text>
+            {isLoadingLocation && (
+              <View style={styles.locationLoading}>
+                <ActivityIndicator size="small" color="#007AFF" />
+                <Text style={styles.locationLoadingText}>Finding nearest airport...</Text>
+              </View>
+            )}
+            <TextInput
+              style={styles.input}
+              placeholder="From (e.g., LAX, New York)"
+              value={searchParams.from}
+              onChangeText={(text) => setSearchParams({ ...searchParams, from: text })}
+              autoCapitalize="characters"
+            />
+          </View>
 
           <TextInput
             style={styles.input}
@@ -259,6 +351,25 @@ const styles = StyleSheet.create({
     color: '#0C5460',
     fontSize: 12,
     textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 5,
+  },
+  locationLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  locationLoadingText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 5,
   },
   input: {
     borderWidth: 1,

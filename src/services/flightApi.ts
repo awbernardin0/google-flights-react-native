@@ -21,7 +21,21 @@ export const flightApi = {
           locale: 'en-US',
         },
       });
-      return response.data || [];
+      console.log('Airport search response:', response);
+      // Handle the new API response structure where data is nested under response.data.data
+      const airportData = response.data?.data || response.data || [];
+      
+      // Transform the new API response format to match our expected format
+      return airportData.map((airport: any) => ({
+        skyId: airport.skyId,
+        iataCode: airport.skyId, // Use skyId as iataCode
+        name: airport.presentation?.title || airport.navigation?.localizedName || '',
+        city: airport.navigation?.localizedName || airport.presentation?.title || '',
+        displayCode: airport.skyId,
+        cityName: airport.navigation?.localizedName || airport.presentation?.title || '',
+        entityType: airport.navigation?.entityType || 'AIRPORT',
+        subtitle: airport.presentation?.subtitle || ''
+      }));
     } catch (error: any) {
       console.error('Airport search error:', error);
       
@@ -45,7 +59,20 @@ export const flightApi = {
           locale: 'en-US',
         },
       });
-      return response.data || [];
+      // Handle the new API response structure where data is nested under response.data.data
+      const airportData = response.data?.data || response.data || [];
+      
+      // Transform the new API response format to match our expected format
+      return airportData.map((airport: any) => ({
+        skyId: airport.skyId,
+        iataCode: airport.skyId, // Use skyId as iataCode
+        name: airport.presentation?.title || airport.navigation?.localizedName || '',
+        city: airport.navigation?.localizedName || airport.presentation?.title || '',
+        displayCode: airport.skyId,
+        cityName: airport.navigation?.localizedName || airport.presentation?.title || '',
+        entityType: airport.navigation?.entityType || 'AIRPORT',
+        subtitle: airport.presentation?.subtitle || ''
+      }));
     } catch (error) {
       console.error('Nearby airports search error:', error);
       return [];
@@ -208,10 +235,10 @@ export const flightApi = {
       console.log('API Response:', JSON.stringify(response.data, null, 2));
       
       // Transform the API response to match our Flight interface
-      // Try different possible response structures
-      let itineraries = response.data.data?.itineraries || 
-                       response.data.itineraries || 
-                       response.data.data || 
+      // Handle the new API response structure where data is nested under response.data.data
+      let itineraries = response.data?.data?.itineraries || 
+                       response.data?.itineraries || 
+                       response.data?.data || 
                        [];
       
       const flights: Flight[] = itineraries.map((itinerary: any, index: number) => {

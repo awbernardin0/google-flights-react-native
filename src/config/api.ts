@@ -1,7 +1,7 @@
 // API Configuration
 // Replace this with your actual RapidAPI key from https://rapidapi.com/apiheya/api/sky-scrapper
 export const API_CONFIG = {
-  RAPIDAPI_KEY: '4ad27f0682mshf2fd0a2edf520dfp140a90jsn7fca30e77a80', // Your RapidAPI key
+  RAPIDAPI_KEY: '35aa4b1ecdmsh34bc51243063d73p105bdajsndb4a6f4b9f94', // Your RapidAPI key
   RAPIDAPI_HOST: 'sky-scrapper.p.rapidapi.com',
   BASE_URL: 'https://sky-scrapper.p.rapidapi.com',
 };
