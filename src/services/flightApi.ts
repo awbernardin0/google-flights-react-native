@@ -166,7 +166,11 @@ export const flightApi = {
       
       // If API fails, fall back to mock data for demo purposes
       console.log('Falling back to mock data due to API error');
-      return flightApi.getMockFlights(params);
+      return {
+        success: false,
+        data: flightApi.getMockFlights(params).data,
+        error: `API Error: ${error?.response?.status || error?.message || 'Unknown error'}`
+      };
     }
   },
 
