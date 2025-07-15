@@ -2,19 +2,18 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   Alert,
   ActivityIndicator,
-  PermissionsAndroid,
-  Platform,
 } from 'react-native';
-import Geolocation from '@react-native-community/geolocation';
 import { flightApi } from '../services/flightApi';
 import { Flight, FlightSearchParams } from '../types';
 import FlightCard from '../components/FlightCard';
+import SearchInput from '../components/SearchInput';
+import ApiStatusIndicator from '../components/ApiStatusIndicator';
+import { getUserLocation } from '../utils/locationService';
 import { isApiConfigured } from '../config/api';
 
 interface FlightSearchScreenProps {
@@ -40,76 +39,38 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     getCurrentLocation();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const requestLocationPermission = async () => {
-    if (Platform.OS === 'ios') {
-      return true; // iOS handles permissions differently
-    }
-
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission',
-          message: 'This app needs access to your location to find nearby airports.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
-
   const getCurrentLocation = async () => {
     try {
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        console.log('Location permission denied');
-        setIsLoadingLocation(false);
-        return;
-      }
+      const coordinates = await getUserLocation();
+      
+      if (coordinates) {
+        console.log('Current location:', coordinates);
 
-      // Get current position using the proper geolocation library
-      Geolocation.getCurrentPosition(
-        async (position: any) => {
-          const { latitude, longitude } = position.coords;
-          console.log('Current location:', { latitude, longitude });
+        try {
+          // Get nearby airports
+          const nearbyAirports = await flightApi.getNearbyAirports(coordinates.latitude, coordinates.longitude);
+          console.log('Nearby airports:', nearbyAirports);
 
-          try {
-            // Get nearby airports
-            const nearbyAirports = await flightApi.getNearbyAirports(latitude, longitude);
-            console.log('Nearby airports:', nearbyAirports);
-
-            if (nearbyAirports && nearbyAirports.length > 0) {
-              // Set the closest airport as default
-              const closestAirport = nearbyAirports[0];
-              const airportCode = closestAirport.iataCode || closestAirport.code || closestAirport.skyId;
-              
-              if (airportCode) {
-                setSearchParams(prev => ({
-                  ...prev,
-                  from: airportCode
-                }));
-                console.log('Set default airport to:', airportCode);
-              }
+          if (nearbyAirports && nearbyAirports.length > 0) {
+            // Set the closest airport as default
+            const closestAirport = nearbyAirports[0];
+            const airportCode = closestAirport.iataCode || closestAirport.skyId;
+            
+            if (airportCode) {
+              setSearchParams(prev => ({
+                ...prev,
+                from: airportCode
+              }));
+              console.log('Set default airport to:', airportCode);
             }
-          } catch (error) {
-            console.log('Failed to get nearby airports:', error);
-          } finally {
-            setIsLoadingLocation(false);
           }
-        },
-        (error: any) => {
-          console.log('Location error:', error);
-          setIsLoadingLocation(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
+        } catch (error) {
+          console.log('Failed to get nearby airports:', error);
+        }
+      }
     } catch (error) {
-      console.log('Location permission error:', error);
+      console.log('Location service error:', error);
+    } finally {
       setIsLoadingLocation(false);
     }
   };
@@ -171,60 +132,36 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
         <View style={styles.searchForm}>
           <Text style={styles.formTitle}>Search Flights</Text>
           
-          {!isApiConfigured() && (
-            <View style={styles.apiWarning}>
-              <Text style={styles.apiWarningText}>
-                ⚠️ Using mock data. Add your RapidAPI key to use real flight data.
-              </Text>
-            </View>
-          )}
+          <ApiStatusIndicator isConfigured={isApiConfigured()} />
           
-          {isApiConfigured() && (
-            <View style={styles.apiInfo}>
-              <Text style={styles.apiInfoText}>
-                ✅ Real API configured. Rate limit may apply on free tier.
-              </Text>
-            </View>
-          )}
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>From</Text>
-            {isLoadingLocation && (
-              <View style={styles.locationLoading}>
-                <ActivityIndicator size="small" color="#007AFF" />
-                <Text style={styles.locationLoadingText}>Finding nearest airport...</Text>
-              </View>
-            )}
-            <TextInput
-              style={styles.input}
-              placeholder="From (e.g., LAX, New York)"
-              value={searchParams.from}
-              onChangeText={(text) => setSearchParams({ ...searchParams, from: text })}
-              autoCapitalize="characters"
-            />
-          </View>
+          <SearchInput
+            label="From"
+            placeholder="From (e.g., LAX, New York)"
+            value={searchParams.from}
+            onChangeText={(text) => setSearchParams({ ...searchParams, from: text })}
+            loading={isLoadingLocation}
+            loadingText="Finding nearest airport..."
+          />
 
-          <TextInput
-            style={styles.input}
+          <SearchInput
+            label="To"
             placeholder="To (e.g., JFK, Los Angeles)"
             value={searchParams.to}
             onChangeText={(text) => setSearchParams({ ...searchParams, to: text })}
-            autoCapitalize="characters"
           />
 
-          <TextInput
-            style={styles.input}
+          <SearchInput
+            label="Date"
             placeholder="Date (YYYY-MM-DD)"
             value={searchParams.date}
             onChangeText={(text) => setSearchParams({ ...searchParams, date: text })}
           />
 
-          <TextInput
-            style={styles.input}
+          <SearchInput
+            label="Passengers"
             placeholder="Passengers (default: 1)"
             value={searchParams.passengers?.toString() || '1'}
             onChangeText={(text) => setSearchParams({ ...searchParams, passengers: parseInt(text) || 1 })}
-            keyboardType="numeric"
           />
 
           <TouchableOpacity

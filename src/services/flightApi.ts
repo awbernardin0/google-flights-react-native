@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { FlightSearchParams, FlightSearchResponse, Flight } from '../types';
 import { API_CONFIG, isApiConfigured } from '../config/api';
+import { transformAirportData, extractApiData, handleApiError } from '../utils/apiTransformers';
+import { getMockAirports, generateMockFlights } from '../utils/mockData';
 
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -22,30 +24,11 @@ export const flightApi = {
         },
       });
       console.log('Airport search response:', response);
-      // Handle the new API response structure where data is nested under response.data.data
-      const airportData = response.data?.data || response.data || [];
-      
-      // Transform the new API response format to match our expected format
-      return airportData.map((airport: any) => ({
-        skyId: airport.skyId,
-        iataCode: airport.skyId, // Use skyId as iataCode
-        name: airport.presentation?.title || airport.navigation?.localizedName || '',
-        city: airport.navigation?.localizedName || airport.presentation?.title || '',
-        displayCode: airport.skyId,
-        cityName: airport.navigation?.localizedName || airport.presentation?.title || '',
-        entityType: airport.navigation?.entityType || 'AIRPORT',
-        subtitle: airport.presentation?.subtitle || ''
-      }));
+      const airportData = extractApiData(response);
+      return transformAirportData(airportData);
     } catch (error: any) {
-      console.error('Airport search error:', error);
-      
-      // Handle rate limiting specifically
-      if (error?.response?.status === 429) {
-        console.log('Rate limit exceeded, using mock data');
-      }
-      
-      // Return mock airport data for common codes
-      return flightApi.getMockAirports(query);
+      handleApiError(error, 'Airport search');
+      return getMockAirports(query);
     }
   },
 
@@ -59,145 +42,17 @@ export const flightApi = {
           locale: 'en-US',
         },
       });
-      // Handle the new API response structure where data is nested under response.data.data
-      const airportData = response.data?.data || response.data || [];
-      
-      // Transform the new API response format to match our expected format
-      return airportData.map((airport: any) => ({
-        skyId: airport.skyId,
-        iataCode: airport.skyId, // Use skyId as iataCode
-        name: airport.presentation?.title || airport.navigation?.localizedName || '',
-        city: airport.navigation?.localizedName || airport.presentation?.title || '',
-        displayCode: airport.skyId,
-        cityName: airport.navigation?.localizedName || airport.presentation?.title || '',
-        entityType: airport.navigation?.entityType || 'AIRPORT',
-        subtitle: airport.presentation?.subtitle || ''
-      }));
+      const airportData = extractApiData(response);
+      return transformAirportData(airportData);
     } catch (error) {
-      console.error('Nearby airports search error:', error);
+      handleApiError(error, 'Nearby airports search');
       return [];
     }
   },
 
   // Mock airport data for common codes
   getMockAirports: (query: string) => {
-    const airports: { [key: string]: any[] } = {
-      'LAX': [{ 
-        skyId: 'LAX', 
-        iataCode: 'LAX', 
-        name: 'Los Angeles International Airport', 
-        city: 'Los Angeles',
-        displayCode: 'LAX',
-        cityName: 'Los Angeles'
-      }],
-      'JFK': [{ 
-        skyId: 'JFK', 
-        iataCode: 'JFK', 
-        name: 'John F. Kennedy International Airport', 
-        city: 'New York',
-        displayCode: 'JFK',
-        cityName: 'New York'
-      }],
-      'SFO': [{ 
-        skyId: 'SFO', 
-        iataCode: 'SFO', 
-        name: 'San Francisco International Airport', 
-        city: 'San Francisco',
-        displayCode: 'SFO',
-        cityName: 'San Francisco'
-      }],
-      'ORD': [{ 
-        skyId: 'ORD', 
-        iataCode: 'ORD', 
-        name: 'O\'Hare International Airport', 
-        city: 'Chicago',
-        displayCode: 'ORD',
-        cityName: 'Chicago'
-      }],
-      'MIA': [{ 
-        skyId: 'MIA', 
-        iataCode: 'MIA', 
-        name: 'Miami International Airport', 
-        city: 'Miami',
-        displayCode: 'MIA',
-        cityName: 'Miami'
-      }],
-      'DFW': [{ 
-        skyId: 'DFW', 
-        iataCode: 'DFW', 
-        name: 'Dallas/Fort Worth International Airport', 
-        city: 'Dallas',
-        displayCode: 'DFW',
-        cityName: 'Dallas'
-      }],
-      'ATL': [{ 
-        skyId: 'ATL', 
-        iataCode: 'ATL', 
-        name: 'Hartsfield-Jackson Atlanta International Airport', 
-        city: 'Atlanta',
-        displayCode: 'ATL',
-        cityName: 'Atlanta'
-      }],
-      'DEN': [{ 
-        skyId: 'DEN', 
-        iataCode: 'DEN', 
-        name: 'Denver International Airport', 
-        city: 'Denver',
-        displayCode: 'DEN',
-        cityName: 'Denver'
-      }],
-      'LAS': [{ 
-        skyId: 'LAS', 
-        iataCode: 'LAS', 
-        name: 'McCarran International Airport', 
-        city: 'Las Vegas',
-        displayCode: 'LAS',
-        cityName: 'Las Vegas'
-      }],
-      'SEA': [{ 
-        skyId: 'SEA', 
-        iataCode: 'SEA', 
-        name: 'Seattle-Tacoma International Airport', 
-        city: 'Seattle',
-        displayCode: 'SEA',
-        cityName: 'Seattle'
-      }],
-      'LHR': [{ 
-        skyId: 'LHR', 
-        iataCode: 'LHR', 
-        name: 'London Heathrow Airport', 
-        city: 'London',
-        displayCode: 'LHR',
-        cityName: 'London'
-      }],
-      'CDG': [{ 
-        skyId: 'CDG', 
-        iataCode: 'CDG', 
-        name: 'Charles de Gaulle Airport', 
-        city: 'Paris',
-        displayCode: 'CDG',
-        cityName: 'Paris'
-      }],
-      'NRT': [{ 
-        skyId: 'NRT', 
-        iataCode: 'NRT', 
-        name: 'Narita International Airport', 
-        city: 'Tokyo',
-        displayCode: 'NRT',
-        cityName: 'Tokyo'
-      }],
-      'YYZ': [{ 
-        skyId: 'YYZ', 
-        iataCode: 'YYZ', 
-        name: 'Toronto Pearson International Airport', 
-        city: 'Toronto',
-        displayCode: 'YYZ',
-        cityName: 'Toronto'
-      }],
-    };
-
-    const upperQuery = query.toUpperCase();
-    return airports[upperQuery] || [];
+    return getMockAirports(query);
   },
 
   // Search flights using the real API
@@ -317,89 +172,7 @@ export const flightApi = {
 
   // Mock data for development when API key is not available or API fails
   getMockFlights: (params: FlightSearchParams): FlightSearchResponse => {
-    const mockFlights: Flight[] = [
-      {
-        id: '1',
-        airline: 'American Airlines',
-        flightNumber: 'AA123',
-        departure: {
-          airport: params.from || 'LAX',
-          city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-          time: '08:00',
-          date: params.date,
-        },
-        arrival: {
-          airport: params.to || 'JFK',
-          city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-          time: '16:30',
-          date: params.date,
-        },
-        price: 299,
-        duration: '8h 30m',
-        stops: 0,
-      },
-      {
-        id: '2',
-        airline: 'Delta Airlines',
-        flightNumber: 'DL456',
-        departure: {
-          airport: params.from || 'LAX',
-          city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-          time: '10:15',
-          date: params.date,
-        },
-        arrival: {
-          airport: params.to || 'JFK',
-          city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-          time: '18:45',
-          date: params.date,
-        },
-        price: 275,
-        duration: '8h 30m',
-        stops: 1,
-      },
-      {
-        id: '3',
-        airline: 'United Airlines',
-        flightNumber: 'UA789',
-        departure: {
-          airport: params.from || 'LAX',
-          city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-          time: '12:30',
-          date: params.date,
-        },
-        arrival: {
-          airport: params.to || 'JFK',
-          city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-          time: '21:00',
-          date: params.date,
-        },
-        price: 320,
-        duration: '8h 30m',
-        stops: 0,
-      },
-      {
-        id: '4',
-        airline: 'Southwest Airlines',
-        flightNumber: 'WN101',
-        departure: {
-          airport: params.from || 'LAX',
-          city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-          time: '14:45',
-          date: params.date,
-        },
-        arrival: {
-          airport: params.to || 'JFK',
-          city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-          time: '23:15',
-          date: params.date,
-        },
-        price: 245,
-        duration: '8h 30m',
-        stops: 1,
-      },
-    ];
-
+    const mockFlights = generateMockFlights(params);
     return {
       success: true,
       data: mockFlights,
