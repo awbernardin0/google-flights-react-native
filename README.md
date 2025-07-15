@@ -77,12 +77,24 @@ npm run android
 
 The app uses the Sky Scrapper API from RapidAPI for flight search. To use the real API:
 
-1. Sign up for a RapidAPI account
-2. Subscribe to the Sky Scrapper API
-3. Get your API key
-4. Replace `YOUR_RAPIDAPI_KEY` in `src/services/flightApi.ts` with your actual API key
+1. **Sign up for a RapidAPI account** at https://rapidapi.com
+2. **Subscribe to the Sky Scrapper API** at https://rapidapi.com/apiheya/api/sky-scrapper (they have a free tier)
+3. **Get your API key** from the RapidAPI dashboard
+4. **Replace the API key** in `src/config/api.ts`:
+   ```typescript
+   export const API_CONFIG = {
+     RAPIDAPI_KEY: 'YOUR_ACTUAL_API_KEY_HERE', // Replace this
+     // ... rest of config
+   };
+   ```
+5. **Restart the app** to load the new configuration
 
-Currently, the app uses mock data for demonstration purposes.
+**Note:** The app will automatically fall back to mock data if:
+- No API key is configured
+- The API key is invalid
+- The API is unavailable
+
+This ensures the app always works for demonstration purposes.
 
 ## Features in Detail
 

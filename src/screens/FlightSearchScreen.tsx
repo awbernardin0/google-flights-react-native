@@ -12,6 +12,7 @@ import {
 import { flightApi } from '../services/flightApi';
 import { Flight, FlightSearchParams } from '../types';
 import FlightCard from '../components/FlightCard';
+import { isApiConfigured } from '../config/api';
 
 interface FlightSearchScreenProps {
   navigation: any;
@@ -28,6 +29,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
   const [flights, setFlights] = useState<Flight[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isUsingRealApi, setIsUsingRealApi] = useState(false);
 
   const handleSearch = async () => {
     if (!searchParams.from || !searchParams.to) {
@@ -39,9 +41,24 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     setHasSearched(true);
 
     try {
-      // Use mock data for now since we don't have the actual API key
-      const result = flightApi.getMockFlights(searchParams);
-      setFlights(result.data);
+      // Check if real API is configured
+      const apiConfigured = isApiConfigured();
+      setIsUsingRealApi(apiConfigured);
+
+      if (apiConfigured) {
+        // Use real API
+        const result = await flightApi.searchFlights(searchParams);
+        if (result.success) {
+          setFlights(result.data);
+        } else {
+          Alert.alert('Search Error', result.error || 'Failed to search flights');
+          setFlights([]);
+        }
+      } else {
+        // Use mock data
+        const result = flightApi.getMockFlights(searchParams);
+        setFlights(result.data);
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to search flights');
       setFlights([]);
@@ -71,9 +88,25 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
         <View style={styles.searchForm}>
           <Text style={styles.formTitle}>Search Flights</Text>
           
+          {!isApiConfigured() && (
+            <View style={styles.apiWarning}>
+              <Text style={styles.apiWarningText}>
+                ⚠️ Using mock data. Add your RapidAPI key to use real flight data.
+              </Text>
+            </View>
+          )}
+          
+          {isApiConfigured() && (
+            <View style={styles.apiInfo}>
+              <Text style={styles.apiInfoText}>
+                ✅ Real API configured. Rate limit may apply on free tier.
+              </Text>
+            </View>
+          )}
+          
           <TextInput
             style={styles.input}
-            placeholder="From (e.g., LAX)"
+            placeholder="From (e.g., LAX, New York)"
             value={searchParams.from}
             onChangeText={(text) => setSearchParams({ ...searchParams, from: text })}
             autoCapitalize="characters"
@@ -81,7 +114,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
 
           <TextInput
             style={styles.input}
-            placeholder="To (e.g., JFK)"
+            placeholder="To (e.g., JFK, Los Angeles)"
             value={searchParams.to}
             onChangeText={(text) => setSearchParams({ ...searchParams, to: text })}
             autoCapitalize="characters"
@@ -120,6 +153,14 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
             <Text style={styles.resultsTitle}>
               {isLoading ? 'Searching...' : `Found ${flights.length} flights`}
             </Text>
+            
+            {!isLoading && isUsingRealApi && (
+              <Text style={styles.apiStatus}>✅ Using real flight data</Text>
+            )}
+            
+            {!isLoading && !isUsingRealApi && (
+              <Text style={styles.apiStatus}>📱 Using demo data</Text>
+            )}
             
             {!isLoading && flights.length === 0 && (
               <Text style={styles.noResults}>No flights found for your search criteria.</Text>
@@ -193,6 +234,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
+  apiWarning: {
+    backgroundColor: '#FFF3CD',
+    borderColor: '#FFEAA7',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  apiWarningText: {
+    color: '#856404',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  apiInfo: {
+    backgroundColor: '#D1ECF1',
+    borderColor: '#BEE5EB',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  apiInfoText: {
+    color: '#0C5460',
+    fontSize: 12,
+    textAlign: 'center',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -226,6 +293,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 15,
     color: '#333',
+  },
+  apiStatus: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   noResults: {
     textAlign: 'center',
