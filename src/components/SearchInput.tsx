@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ interface SearchInputProps {
   loadingText?: string;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({
+const SearchInput: React.FC<SearchInputProps> = memo(({
   label,
   placeholder,
   value,
@@ -41,7 +41,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   inputContainer: {

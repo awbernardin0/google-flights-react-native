@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,12 @@ interface FlightCardProps {
 }
 
 const FlightCard: React.FC<FlightCardProps> = ({ flight, onPress }) => {
+  // Memoize computed values to prevent unnecessary re-calculations
+  const stopsText = useMemo(() => 
+    flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`,
+    [flight.stops]
+  );
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.header}>
@@ -31,7 +37,7 @@ const FlightCard: React.FC<FlightCardProps> = ({ flight, onPress }) => {
           <View style={styles.durationLine} />
           <Text style={styles.duration}>{flight.duration}</Text>
           <Text style={styles.stops}>
-            {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
+            {stopsText}
           </Text>
         </View>
 

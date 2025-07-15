@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     getCurrentLocation();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocation = useCallback(async () => {
     try {
       const coordinates = await getUserLocation();
       
@@ -73,9 +73,9 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     } finally {
       setIsLoadingLocation(false);
     }
-  };
+  }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchParams.from || !searchParams.to) {
       Alert.alert('Error', 'Please fill in both departure and destination');
       return;
@@ -109,12 +109,20 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchParams]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     // This would be handled by the auth context
     navigation.navigate('Auth');
-  };
+  }, [navigation]);
+
+  // Memoize computed values to prevent unnecessary re-renders
+  const isApiConfiguredValue = useMemo(() => isApiConfigured(), []);
+  const resultsTitle = useMemo(() => 
+    isLoading ? 'Searching...' : `Found ${flights.length} flights`, 
+    [isLoading, flights.length]
+  );
+  const hasFlights = useMemo(() => flights.length > 0, [flights.length]);
 
   return (
     <View style={styles.container}>
@@ -132,7 +140,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
         <View style={styles.searchForm}>
           <Text style={styles.formTitle}>Search Flights</Text>
           
-          <ApiStatusIndicator isConfigured={isApiConfigured()} />
+          <ApiStatusIndicator isConfigured={isApiConfiguredValue} />
           
           <SearchInput
             label="From"
@@ -180,7 +188,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
         {hasSearched && (
           <View style={styles.resultsSection}>
             <Text style={styles.resultsTitle}>
-              {isLoading ? 'Searching...' : `Found ${flights.length} flights`}
+              {resultsTitle}
             </Text>
             
             {!isLoading && isUsingRealApi && (
@@ -191,7 +199,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
               <Text style={styles.apiStatus}>📱 Using demo data</Text>
             )}
             
-            {!isLoading && flights.length === 0 && (
+            {!isLoading && !hasFlights && (
               <Text style={styles.noResults}>No flights found for your search criteria.</Text>
             )}
 

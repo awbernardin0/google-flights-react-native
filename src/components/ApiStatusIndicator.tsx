@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ interface ApiStatusIndicatorProps {
   isConfigured: boolean;
 }
 
-const ApiStatusIndicator: React.FC<ApiStatusIndicatorProps> = ({ isConfigured }) => {
+const ApiStatusIndicator: React.FC<ApiStatusIndicatorProps> = memo(({ isConfigured }) => {
   if (!isConfigured) {
     return (
       <View style={styles.apiWarning}>
@@ -27,7 +27,7 @@ const ApiStatusIndicator: React.FC<ApiStatusIndicatorProps> = ({ isConfigured })
       </Text>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   apiWarning: {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, onLogin }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     if (!credentials.email || !credentials.password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -44,7 +44,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, onLogin }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [credentials, onLogin]);
 
   return (
     <KeyboardAvoidingView
