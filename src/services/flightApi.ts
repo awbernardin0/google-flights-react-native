@@ -78,7 +78,7 @@ export const flightApi = {
         params: {
           origin: fromAirport.skyId || fromAirport.iataCode,
           destination: toAirport.skyId || toAirport.iataCode,
-          date: params.date,
+          date: params.departureDate,
           adults: params.passengers || 1,
           cabinClass: params.class || 'economy',
           currency: 'USD',
@@ -119,7 +119,7 @@ export const flightApi = {
             time: leg?.departure || 
                   leg?.departureTime || 
                   '',
-            date: params.date,
+            date: params.departureDate,
           },
           arrival: {
             airport: leg?.destination?.displayCode || 
@@ -132,7 +132,7 @@ export const flightApi = {
             time: leg?.arrival || 
                   leg?.arrivalTime || 
                   '',
-            date: params.date,
+            date: params.departureDate,
           },
           price: pricing?.price?.amount || 
                 pricing?.amount || 

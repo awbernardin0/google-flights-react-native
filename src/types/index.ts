@@ -29,9 +29,11 @@ export interface Flight {
 export interface FlightSearchParams {
   from: string;
   to: string;
-  date: string;
+  departureDate: string;
+  returnDate?: string;
   passengers?: number;
   class?: string;
+  isRoundTrip?: boolean;
 }
 
 export interface FlightSearchResponse {

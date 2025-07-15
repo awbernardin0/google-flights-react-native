@@ -11,6 +11,7 @@ import { FlightSearchParams } from '../types';
 import FlightCard from '../components/FlightCard';
 import SearchInput from '../components/SearchInput';
 import ApiStatusIndicator from '../components/ApiStatusIndicator';
+import DateRangePicker from '../components/DateRangePicker';
 import { useFlightSearch, useLocation, useApiStatus } from '../hooks';
 
 interface FlightSearchScreenProps {
@@ -22,8 +23,10 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
   const [searchParams, setSearchParams] = useState<FlightSearchParams>({
     from: '',
     to: '',
-    date: new Date().toISOString().split('T')[0], // Today's date
+    departureDate: new Date().toISOString().split('T')[0], // Today's date
+    returnDate: undefined,
     passengers: 1,
+    isRoundTrip: true,
   });
 
   // Custom hooks
@@ -57,7 +60,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Flight Search</Text>
+        <Text style={styles.headerTitle}>Flights</Text>
         <View style={styles.userInfo}>
           <Text style={styles.userName}>Welcome, {user?.name}</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -88,11 +91,13 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
             onChangeText={(text) => setSearchParams({ ...searchParams, to: text })}
           />
 
-          <SearchInput
-            label="Date"
-            placeholder="Date (YYYY-MM-DD)"
-            value={searchParams.date}
-            onChangeText={(text) => setSearchParams({ ...searchParams, date: text })}
+          <DateRangePicker
+            departureDate={searchParams.departureDate}
+            returnDate={searchParams.returnDate}
+            onDepartureDateChange={(date) => setSearchParams({ ...searchParams, departureDate: date })}
+            onReturnDateChange={(date) => setSearchParams({ ...searchParams, returnDate: date })}
+            isRoundTrip={searchParams.isRoundTrip}
+            onTripTypeChange={(isRoundTrip) => setSearchParams({ ...searchParams, isRoundTrip })}
           />
 
           <SearchInput
