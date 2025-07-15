@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { authService } from '../services/authService';
 import { RegisterCredentials } from '../types';
+import { useForm } from '../hooks';
 
 interface RegisterScreenProps {
   navigation: any;
@@ -19,7 +20,7 @@ interface RegisterScreenProps {
 }
 
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, onRegister }) => {
-  const [credentials, setCredentials] = useState<RegisterCredentials>({
+  const { values: credentials, setValue } = useForm<RegisterCredentials>({
     name: '',
     email: '',
     password: '',
@@ -77,8 +78,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, onRegister 
             <TextInput
               style={styles.input}
               placeholder="Full Name"
-              value={credentials.name}
-              onChangeText={(text) => setCredentials({ ...credentials, name: text })}
+                          value={credentials.name}
+            onChangeText={(text) => setValue('name', text)}
               autoCapitalize="words"
               autoCorrect={false}
             />
@@ -86,8 +87,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, onRegister 
             <TextInput
               style={styles.input}
               placeholder="Email"
-              value={credentials.email}
-              onChangeText={(text) => setCredentials({ ...credentials, email: text })}
+                          value={credentials.email}
+            onChangeText={(text) => setValue('email', text)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -96,8 +97,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, onRegister 
             <TextInput
               style={styles.input}
               placeholder="Password"
-              value={credentials.password}
-              onChangeText={(text) => setCredentials({ ...credentials, password: text })}
+                          value={credentials.password}
+            onChangeText={(text) => setValue('password', text)}
               secureTextEntry
               autoCapitalize="none"
             />
@@ -105,8 +106,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, onRegister 
             <TextInput
               style={styles.input}
               placeholder="Confirm Password"
-              value={credentials.confirmPassword}
-              onChangeText={(text) => setCredentials({ ...credentials, confirmPassword: text })}
+                          value={credentials.confirmPassword}
+            onChangeText={(text) => setValue('confirmPassword', text)}
               secureTextEntry
               autoCapitalize="none"
             />

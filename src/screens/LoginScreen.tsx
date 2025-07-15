@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { authService } from '../services/authService';
 import { LoginCredentials } from '../types';
+import { useForm } from '../hooks';
 
 interface LoginScreenProps {
   navigation: any;
@@ -19,7 +20,7 @@ interface LoginScreenProps {
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, onLogin }) => {
-  const [credentials, setCredentials] = useState<LoginCredentials>({
+  const { values: credentials, setValue } = useForm<LoginCredentials>({
     email: '',
     password: '',
   });
@@ -60,8 +61,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, onLogin }) => {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              value={credentials.email}
-              onChangeText={(text) => setCredentials({ ...credentials, email: text })}
+                          value={credentials.email}
+            onChangeText={(text) => setValue('email', text)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -70,8 +71,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, onLogin }) => {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              value={credentials.password}
-              onChangeText={(text) => setCredentials({ ...credentials, password: text })}
+                          value={credentials.password}
+            onChangeText={(text) => setValue('password', text)}
               secureTextEntry
               autoCapitalize="none"
             />

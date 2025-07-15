@@ -1,20 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
-import { flightApi } from '../services/flightApi';
-import { Flight, FlightSearchParams } from '../types';
+import { FlightSearchParams } from '../types';
 import FlightCard from '../components/FlightCard';
 import SearchInput from '../components/SearchInput';
 import ApiStatusIndicator from '../components/ApiStatusIndicator';
-import { getUserLocation } from '../utils/locationService';
-import { isApiConfigured } from '../config/api';
+import { useFlightSearch, useLocation, useApiStatus } from '../hooks';
 
 interface FlightSearchScreenProps {
   navigation: any;
@@ -28,108 +25,29 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
     date: new Date().toISOString().split('T')[0], // Today's date
     passengers: 1,
   });
-  const [flights, setFlights] = useState<Flight[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [isUsingRealApi, setIsUsingRealApi] = useState(false);
-  const [apiFailed, setApiFailed] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-  // Get user's current location and set default airport
-  useEffect(() => {
-    getCurrentLocation();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Custom hooks
+  const {
+    flights,
+    isLoading,
+    hasSearched,
+    isUsingRealApi,
+    apiFailed,
+    searchFlights,
+  } = useFlightSearch();
 
-  const getCurrentLocation = useCallback(async () => {
-    try {
-      const coordinates = await getUserLocation();
-      
-      if (coordinates) {
-        console.log('Current location:', coordinates);
+  const { isLoadingLocation } = useLocation(setSearchParams);
+  const { isConfigured: isApiConfiguredValue } = useApiStatus();
 
-        try {
-          // Get nearby airports
-          const nearbyAirports = await flightApi.getNearbyAirports(coordinates.latitude, coordinates.longitude);
-          console.log('Nearby airports:', nearbyAirports);
+  const handleSearch = () => {
+    searchFlights(searchParams);
+  };
 
-          if (nearbyAirports && nearbyAirports.length > 0) {
-            // Set the closest airport as default
-            const closestAirport = nearbyAirports[0];
-            const airportCode = closestAirport.iataCode || closestAirport.skyId;
-            
-            if (airportCode) {
-              setSearchParams(prev => ({
-                ...prev,
-                from: airportCode
-              }));
-              console.log('Set default airport to:', airportCode);
-            }
-          }
-        } catch (error) {
-          console.log('Failed to get nearby airports:', error);
-        }
-      }
-    } catch (error) {
-      console.log('Location service error:', error);
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  }, []);
-
-  const handleSearch = useCallback(async () => {
-    if (!searchParams.from || !searchParams.to) {
-      Alert.alert('Error', 'Please fill in both departure and destination');
-      return;
-    }
-
-    setIsLoading(true);
-    setHasSearched(true);
-
-    try {
-      // Check if real API is configured
-      const apiConfigured = isApiConfigured();
-      setApiFailed(false);
-
-      if (apiConfigured) {
-        // Use real API
-        const result = await flightApi.searchFlights(searchParams);
-        if (result.success) {
-          console.log('✅ API call successful, using real data');
-          setFlights(result.data);
-          setIsUsingRealApi(true);
-        } else {
-          // API failed but returned mock data
-          console.log('⚠️ API failed, using provided mock data:', result.error);
-          setFlights(result.data);
-          setIsUsingRealApi(false);
-          setApiFailed(true);
-        }
-      } else {
-        // Use mock data
-        const result = flightApi.getMockFlights(searchParams);
-        setFlights(result.data);
-        setIsUsingRealApi(false);
-      }
-    } catch (error) {
-      console.log('❌ API call threw exception, using mock data:', error);
-      // API call failed, fall back to mock data
-      const mockResult = flightApi.getMockFlights(searchParams);
-      setFlights(mockResult.data);
-      setIsUsingRealApi(false);
-      setApiFailed(true);
-      // Don't show alert for API failures since we're showing mock data
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchParams]);
-
-  const handleLogout = useCallback(async () => {
-    // This would be handled by the auth context
+  const handleLogout = () => {
     navigation.navigate('Auth');
-  }, [navigation]);
+  };
 
   // Memoize computed values to prevent unnecessary re-renders
-  const isApiConfiguredValue = useMemo(() => isApiConfigured(), []);
   const resultsTitle = useMemo(() => 
     isLoading ? 'Searching...' : `Found ${flights.length} flights`, 
     [isLoading, flights.length]

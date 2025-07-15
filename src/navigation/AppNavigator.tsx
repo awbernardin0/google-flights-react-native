@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { authService } from '../services/authService';
-import { User } from '../types';
+import { useAuth } from '../hooks';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -12,36 +11,7 @@ import FlightSearchScreen from '../screens/FlightSearchScreen';
 const Stack = createStackNavigator();
 
 const AppNavigator: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogin = (userData: User) => {
-    setUser(userData);
-  };
-
-  const handleRegister = (userData: User) => {
-    setUser(userData);
-  };
-
-  const handleLogout = async () => {
-    await authService.logout();
-    setUser(null);
-  };
+  const { user, isLoading, login, register, logout } = useAuth();
 
   if (isLoading) {
     return null; // You could show a loading screen here
@@ -59,7 +29,7 @@ const AppNavigator: React.FC = () => {
           <Stack.Screen name="Main">
             {() => (
               <FlightSearchScreen
-                navigation={{ navigate: () => handleLogout() }}
+                navigation={{ navigate: () => logout() }}
                 user={user}
               />
             )}
@@ -71,7 +41,7 @@ const AppNavigator: React.FC = () => {
               {({ navigation }) => (
                 <LoginScreen
                   navigation={navigation}
-                  onLogin={handleLogin}
+                  onLogin={login}
                 />
               )}
             </Stack.Screen>
@@ -79,7 +49,7 @@ const AppNavigator: React.FC = () => {
               {({ navigation }) => (
                 <RegisterScreen
                   navigation={navigation}
-                  onRegister={handleRegister}
+                  onRegister={register}
                 />
               )}
             </Stack.Screen>
