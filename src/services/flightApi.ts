@@ -60,13 +60,32 @@ export const flightApi = {
     try {
       // First, we need to get airport codes from the search query
       const fromAirports = await flightApi.searchAirports(params.from);
-      const toAirports = await flightApi.searchAirports(params.to);
-
-      if (!fromAirports.length || !toAirports.length) {
+      
+      if (!fromAirports.length) {
         return {
           success: false,
           data: [],
-          error: 'Could not find airports for the specified locations. Try using airport codes like LAX, JFK, SFO.',
+          error: 'Could not find departure airport. Try using airport codes like LAX, JFK, SFO.',
+        };
+      }
+
+      // If no destination is provided, return mock data for demo purposes
+      if (!params.to || params.to.trim() === '') {
+        console.log('No destination provided, using mock data');
+        return {
+          success: false,
+          data: flightApi.getMockFlights(params).data,
+          error: 'No destination specified - showing demo flights'
+        };
+      }
+
+      const toAirports = await flightApi.searchAirports(params.to);
+
+      if (!toAirports.length) {
+        return {
+          success: false,
+          data: [],
+          error: 'Could not find destination airport. Try using airport codes like LAX, JFK, SFO.',
         };
       }
 

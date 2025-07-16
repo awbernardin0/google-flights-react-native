@@ -51,7 +51,7 @@ describe('mockData', () => {
     it('should generate mock flights with correct structure', () => {
       const result = generateMockFlights(mockParams);
       
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(1); // Only one destination when 'to' is provided
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('airline');
       expect(result[0]).toHaveProperty('flightNumber');
@@ -73,8 +73,10 @@ describe('mockData', () => {
       });
     });
 
-    it('should generate different airlines', () => {
-      const result = generateMockFlights(mockParams);
+    it('should generate different airlines when multiple destinations', () => {
+      // Test with no destination to get multiple flights
+      const paramsWithNoDestination = { ...mockParams, to: '' };
+      const result = generateMockFlights(paramsWithNoDestination);
       const airlines = result.map(flight => flight.airline);
       
       expect(airlines).toContain('American Airlines');
@@ -92,8 +94,10 @@ describe('mockData', () => {
       });
     });
 
-    it('should include both direct and connecting flights', () => {
-      const result = generateMockFlights(mockParams);
+    it('should include both direct and connecting flights when multiple destinations', () => {
+      // Test with no destination to get multiple flights
+      const paramsWithNoDestination = { ...mockParams, to: '' };
+      const result = generateMockFlights(paramsWithNoDestination);
       const stops = result.map(flight => flight.stops);
       
       expect(stops).toContain(0); // Direct flights
@@ -109,10 +113,22 @@ describe('mockData', () => {
       
       const result = generateMockFlights(incompleteParams);
       
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(4); // Multiple destinations when no 'to' is provided
       result.forEach(flight => {
         expect(flight.departure.airport).toBe('LAX'); // Default
-        expect(flight.arrival.airport).toBe('JFK'); // Default
+        // Arrival airport will be one of the popular destinations
+        expect(['JFK', 'SFO', 'ORD', 'MIA', 'DFW', 'ATL', 'DEN', 'LAS', 'SEA']).toContain(flight.arrival.airport);
+      });
+    });
+
+    it('should generate multiple flights when no destination is provided', () => {
+      const paramsWithNoDestination = { ...mockParams, to: '' };
+      const result = generateMockFlights(paramsWithNoDestination);
+      
+      expect(result).toHaveLength(4); // Should generate 4 flights to popular destinations
+      result.forEach(flight => {
+        expect(flight.departure.airport).toBe('LAX');
+        expect(['JFK', 'SFO', 'ORD', 'MIA', 'DFW', 'ATL', 'DEN', 'LAS', 'SEA']).toContain(flight.arrival.airport);
       });
     });
   });

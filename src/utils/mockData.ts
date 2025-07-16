@@ -128,86 +128,70 @@ export const getMockAirports = (query: string): any[] => {
  * Generate mock flights for development
  */
 export const generateMockFlights = (params: any): any[] => {
-  return [
-    {
-      id: '1',
-      airline: 'American Airlines',
-      flightNumber: 'AA123',
+  // If no destination is provided, show flights to popular destinations from the departure airport
+  const popularDestinations = ['JFK', 'SFO', 'ORD', 'MIA', 'DFW', 'ATL', 'DEN', 'LAS', 'SEA'];
+  
+  // If destination is provided, use it; otherwise, use popular destinations
+  const destinations = params.to ? [params.to] : popularDestinations;
+  
+  const flights: any[] = [];
+  let flightId = 1;
+  
+  destinations.forEach((dest, index) => {
+    if (index >= 4) return; // Limit to 4 flights for demo
+    
+    const airlines = ['American Airlines', 'Delta Airlines', 'United Airlines', 'Southwest Airlines'];
+    const flightNumbers = ['AA123', 'DL456', 'UA789', 'WN101'];
+    const times = ['08:00', '10:15', '12:30', '14:45'];
+    const prices = [299, 275, 320, 245];
+    
+    flights.push({
+      id: flightId.toString(),
+      airline: airlines[index % airlines.length],
+      flightNumber: flightNumbers[index % flightNumbers.length],
       departure: {
         airport: params.from || 'LAX',
-        city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-        time: '08:00',
+        city: getCityName(params.from),
+        time: times[index % times.length],
         date: params.departureDate,
       },
       arrival: {
-        airport: params.to || 'JFK',
-        city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-        time: '16:30',
+        airport: dest,
+        city: getCityName(dest),
+        time: getArrivalTime(times[index % times.length]),
         date: params.departureDate,
       },
-      price: 299,
+      price: prices[index % prices.length],
       duration: '8h 30m',
-      stops: 0,
-    },
-    {
-      id: '2',
-      airline: 'Delta Airlines',
-      flightNumber: 'DL456',
-      departure: {
-        airport: params.from || 'LAX',
-        city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-        time: '10:15',
-        date: params.departureDate,
-      },
-      arrival: {
-        airport: params.to || 'JFK',
-        city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-        time: '18:45',
-        date: params.departureDate,
-      },
-      price: 275,
-      duration: '8h 30m',
-      stops: 1,
-    },
-    {
-      id: '3',
-      airline: 'United Airlines',
-      flightNumber: 'UA789',
-      departure: {
-        airport: params.from || 'LAX',
-        city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-        time: '12:30',
-        date: params.departureDate,
-      },
-      arrival: {
-        airport: params.to || 'JFK',
-        city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-        time: '21:00',
-        date: params.departureDate,
-      },
-      price: 320,
-      duration: '8h 30m',
-      stops: 0,
-    },
-    {
-      id: '4',
-      airline: 'Southwest Airlines',
-      flightNumber: 'WN101',
-      departure: {
-        airport: params.from || 'LAX',
-        city: params.from === 'LAX' ? 'Los Angeles' : 'New York',
-        time: '14:45',
-        date: params.departureDate,
-      },
-      arrival: {
-        airport: params.to || 'JFK',
-        city: params.to === 'JFK' ? 'New York' : 'Los Angeles',
-        time: '23:15',
-        date: params.departureDate,
-      },
-      price: 245,
-      duration: '8h 30m',
-      stops: 1,
-    },
-  ];
+      stops: index % 2, // Alternate between direct and connecting flights
+    });
+    
+    flightId++;
+  });
+  
+  return flights;
+};
+
+// Helper function to get city name from airport code
+const getCityName = (airportCode: string): string => {
+  const cityMap: { [key: string]: string } = {
+    'LAX': 'Los Angeles',
+    'JFK': 'New York',
+    'SFO': 'San Francisco',
+    'ORD': 'Chicago',
+    'MIA': 'Miami',
+    'DFW': 'Dallas',
+    'ATL': 'Atlanta',
+    'DEN': 'Denver',
+    'LAS': 'Las Vegas',
+    'SEA': 'Seattle',
+  };
+  return cityMap[airportCode] || 'Unknown';
+};
+
+// Helper function to calculate arrival time
+const getArrivalTime = (departureTime: string): string => {
+  const [hours, minutes] = departureTime.split(':').map(Number);
+  const arrivalHours = (hours + 8) % 24; // 8 hour flight
+  return `${arrivalHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }; 

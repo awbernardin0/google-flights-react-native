@@ -90,8 +90,8 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
           />
 
           <SearchInput
-            label="To"
-            placeholder="To (e.g., JFK, Los Angeles)"
+            label="Where to?"
+            placeholder="To (optional - e.g., JFK, Los Angeles)"
             value={searchParams.to}
             onChangeText={(text) => setSearchParams({ ...searchParams, to: text })}
           />

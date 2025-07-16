@@ -22,8 +22,8 @@ export const useFlightSearch = (): UseFlightSearchReturn => {
   const [apiFailed, setApiFailed] = useState(false);
 
   const searchFlights = useCallback(async (searchParams: FlightSearchParams) => {
-    if (!searchParams.from || !searchParams.to) {
-      Alert.alert('Error', 'Please fill in both departure and destination');
+    if (!searchParams.from) {
+      Alert.alert('Error', 'Please fill in the departure airport');
       return;
     }
 

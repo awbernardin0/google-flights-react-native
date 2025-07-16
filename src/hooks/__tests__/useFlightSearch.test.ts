@@ -43,7 +43,7 @@ describe('useFlightSearch', () => {
       });
     });
 
-    expect(mockAlert).toHaveBeenCalledWith('Error', 'Please fill in both departure and destination');
+    expect(mockAlert).toHaveBeenCalledWith('Error', 'Please fill in the departure airport');
     expect(result.current.isLoading).toBe(false);
   });
 
