@@ -44,6 +44,7 @@ export const transformAirportData = (airportData: RawAirportData[]): Transformed
  * Extracts data from nested API response structure
  */
 export const extractApiData = (response: any): any[] => {
+  if (!response) return [];
   return response.data?.data || response.data || [];
 };
 
