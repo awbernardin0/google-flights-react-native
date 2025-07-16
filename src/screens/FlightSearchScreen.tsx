@@ -43,7 +43,12 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
   const { isConfigured: isApiConfiguredValue } = useApiStatus();
 
   const handleSearch = () => {
-    searchFlights(searchParams);
+    // Default passengers to 1 if not specified
+    const searchParamsWithDefaults = {
+      ...searchParams,
+      passengers: searchParams.passengers || 1,
+    };
+    searchFlights(searchParamsWithDefaults);
   };
 
   const handleLogout = () => {
@@ -103,8 +108,15 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
           <SearchInput
             label="Passengers"
             placeholder="Passengers (default: 1)"
-            value={searchParams.passengers?.toString() || '1'}
-            onChangeText={(text) => setSearchParams({ ...searchParams, passengers: parseInt(text, 10) || 1 })}
+            value={searchParams.passengers?.toString() || ''}
+            onChangeText={(text) => {
+              if (text === '') {
+                setSearchParams({ ...searchParams, passengers: undefined });
+              } else {
+                const passengers = parseInt(text, 10);
+                setSearchParams({ ...searchParams, passengers: isNaN(passengers) ? 1 : passengers });
+              }
+            }}
           />
 
           <TouchableOpacity
