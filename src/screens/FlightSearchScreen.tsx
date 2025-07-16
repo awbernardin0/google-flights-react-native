@@ -104,7 +104,7 @@ const FlightSearchScreen: React.FC<FlightSearchScreenProps> = ({ navigation, use
             label="Passengers"
             placeholder="Passengers (default: 1)"
             value={searchParams.passengers?.toString() || '1'}
-            onChangeText={(text) => setSearchParams({ ...searchParams, passengers: parseInt(text) || 1 })}
+            onChangeText={(text) => setSearchParams({ ...searchParams, passengers: parseInt(text, 10) || 1 })}
           />
 
           <TouchableOpacity

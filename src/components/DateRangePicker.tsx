@@ -111,29 +111,6 @@ const DateRangePicker: React.FC<DateRangePickerProps> = memo(({
     }
   }, [isRoundTrip, onTripTypeChange]);
 
-  const getDateRangeText = useCallback(() => {
-    if (!isRoundTrip) {
-      return formatDate(departureDate);
-    }
-    
-    if (!returnDate) {
-      return `${formatDate(departureDate)} - Select return`;
-    }
-    
-    return `${formatDate(departureDate)} - ${formatDate(returnDate)}`;
-  }, [departureDate, returnDate, isRoundTrip, formatDate]);
-
-  const getDaysDifference = useCallback(() => {
-    if (!isRoundTrip || !returnDate) return null;
-    
-    const departure = new Date(departureDate);
-    const returnDateObj = new Date(returnDate);
-    const diffTime = returnDateObj.getTime() - departure.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
-  }, [departureDate, returnDate, isRoundTrip]);
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -172,14 +149,6 @@ const DateRangePicker: React.FC<DateRangePickerProps> = memo(({
           </>
         )}
       </View>
-
-      {/* <Text style={styles.rangeText}>{getDateRangeText()}</Text>
-      
-      {isRoundTrip && getDaysDifference() && (
-        <Text style={styles.daysText}>
-          {getDaysDifference()} day{getDaysDifference() !== 1 ? 's' : ''} trip
-        </Text>
-      )} */}
 
       {/* Departure Date Picker Modal */}
       {Platform.OS === 'android' ? (

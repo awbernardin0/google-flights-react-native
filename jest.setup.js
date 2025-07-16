@@ -1,3 +1,4 @@
+/* global jest */
 // Jest setup for React Native testing
 
 // Mock AsyncStorage

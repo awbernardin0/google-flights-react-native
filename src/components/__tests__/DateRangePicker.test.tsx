@@ -4,14 +4,12 @@ import DateRangePicker from '../DateRangePicker';
 
 // Mock the date picker and modal
 jest.mock('@react-native-community/datetimepicker', () => {
-  const React = require('react');
   return function DateTimePicker(props: any) {
     return React.createElement('DateTimePicker', props);
   };
 });
 
 jest.mock('react-native-modal', () => {
-  const React = require('react');
   return function Modal(props: any) {
     return React.createElement('Modal', props);
   };
